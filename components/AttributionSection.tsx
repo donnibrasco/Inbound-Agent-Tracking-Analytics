@@ -97,9 +97,9 @@ const AttributionSection: React.FC = () => {
                             className="bg-transparent text-xs text-foreground outline-none cursor-pointer py-1"
                           >
                             <option value="all">All Performance</option>
-                            <option value="high">High (&gt;15%)</option>
+                            <option value="high">High (>15%)</option>
                             <option value="medium">Medium (10-15%)</option>
-                            <option value="low">Low (&lt;10%)</option>
+                            <option value="low">Low (<10%)</option>
                           </select>
                         </div>
                         <button className="text-xs bg-foreground/5 hover:bg-foreground/10 text-foreground px-3 py-2 rounded-lg transition-colors border border-border flex items-center font-bold">

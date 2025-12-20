@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { METRICS, VOLUME_DATA, OUTCOME_DATA, RECENT_CALLS } from './constants';
 import { Icons } from './components/Icons';
 import Sidebar from './components/Sidebar';
@@ -20,6 +20,9 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [summaries, setSummaries] = useState<Record<string, string>>({});
   const [loadingSummaries, setLoadingSummaries] = useState<Record<string, boolean>>({});
+  const [expandedSummaryId, setExpandedSummaryId] = useState<string | null>(null);
+  const [callSortConfig, setCallSortConfig] = useState<{ key: 'interest' | null, direction: 'asc' | 'desc' }>({ key: null, direction: 'desc' });
+
 
   useEffect(() => {
     handleAiAnalysis();
@@ -51,6 +54,43 @@ const App: React.FC = () => {
     const summary = await summarizeCall(call);
     setSummaries(prev => ({ ...prev, [callId]: summary }));
     setLoadingSummaries(prev => ({ ...prev, [callId]: false }));
+    setExpandedSummaryId(callId); // Automatically expand after generating
+  };
+
+  const handleToggleSummary = (callId: string) => {
+    if (expandedSummaryId === callId) {
+        setExpandedSummaryId(null);
+    } else {
+        setExpandedSummaryId(callId);
+    }
+  };
+  
+  const handleCallLogSort = (key: 'interest') => {
+    let direction: 'asc' | 'desc' = 'desc';
+    if (callSortConfig.key === key && callSortConfig.direction === 'desc') {
+      direction = 'asc';
+    }
+    setCallSortConfig({ key, direction });
+  };
+  
+  const sortedRecentCalls = useMemo(() => {
+    const sortableCalls = [...RECENT_CALLS];
+    if (callSortConfig.key === 'interest') {
+        const interestOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+        sortableCalls.sort((a, b) => {
+            const valA = interestOrder[a.interest];
+            const valB = interestOrder[b.interest];
+            if (valA < valB) return callSortConfig.direction === 'asc' ? -1 : 1;
+            if (valA > valB) return callSortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+    return sortableCalls;
+  }, [callSortConfig]);
+  
+  const renderCallLogSortIcon = (key: 'interest') => {
+    if (callSortConfig.key !== key) return <Icons.MoreHorizontal size={12} className="ml-1 opacity-20" />;
+    return callSortConfig.direction === 'asc' ? <Icons.TrendingUp size={12} className="ml-1 text-accent" /> : <Icons.TrendingDown size={12} className="ml-1 text-accent" />;
   };
 
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -166,38 +206,51 @@ const App: React.FC = () => {
                         <table className="w-full text-left text-sm">
                             <thead className="bg-card text-gray-500 font-bold uppercase tracking-wider text-[10px]">
                                 <tr>
-                                    <th className="px-6 py-4">Caller</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4">Interest</th>
-                                    <th className="px-6 py-4">AI Insight</th>
-                                    <th className="px-6 py-4 text-right">Time</th>
+                                    <th className="px-4 py-3">Caller</th>
+                                    <th className="px-4 py-3">Status</th>
+                                    <th className="px-4 py-3 cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleCallLogSort('interest')}>
+                                      <div className="flex items-center">
+                                        Interest
+                                        {renderCallLogSortIcon('interest')}
+                                      </div>
+                                    </th>
+                                    <th className="px-4 py-3">Duration</th>
+                                    <th className="px-4 py-3">AI Insight</th>
+                                    <th className="px-4 py-3 text-right">Time</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
-                                {RECENT_CALLS.map((call) => (
-                                    <tr key={call.id} className="hover:bg-accent/5 transition-colors">
-                                        <td className="px-6 py-5">
-                                          <div className="font-semibold text-foreground">{call.caller}</div>
+                                {sortedRecentCalls.map((call) => (
+                                  <React.Fragment key={call.id}>
+                                    <tr className="group hover:bg-accent/5 transition-colors">
+                                        <td className="px-4 py-3">
+                                          <div className="font-semibold text-foreground group-hover:text-accent transition-colors">{call.caller}</div>
                                           <div className="text-[10px] text-gray-500 font-mono mt-0.5">{call.phone}</div>
-                                          <div className="text-[10px] text-gray-400 mt-1">{call.duration} • {call.type}</div>
+                                          <div className="text-[10px] text-gray-400 mt-1">{call.type}</div>
                                         </td>
-                                        <td className="px-6 py-5">
+                                        <td className="px-4 py-3">
                                             <span className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${call.outcome === 'Booked' ? 'bg-emerald-500/10 text-emerald-500' : call.outcome === 'Transferred' ? 'bg-amber-500/10 text-amber-500' : 'bg-gray-500/10 text-gray-500'}`}>
                                                 {call.outcome}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-5">
+                                        <td className="px-4 py-3">
                                             <div className="flex items-center gap-1.5">
-                                              <div className={`w-1.5 h-1.5 rounded-full ${call.interest === 'High' ? 'bg-emerald-500' : 'bg-gray-400'}`}></div>
+                                              <div className={`w-1.5 h-1.5 rounded-full ${call.interest === 'High' ? 'bg-emerald-500' : call.interest === 'Medium' ? 'bg-amber-500' : 'bg-rose-500'}`}></div>
                                               <span className="font-medium text-xs">{call.interest}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5">
+                                        <td className="px-4 py-3">
+                                          <span className="font-medium text-xs text-foreground">{call.duration}</span>
+                                        </td>
+                                        <td className="px-4 py-3">
                                             {summaries[call.id] ? (
-                                                <div className="max-w-[240px] text-xs text-gray-500 leading-relaxed bg-accent/5 border border-accent/10 p-2 rounded-lg relative overflow-hidden group">
-                                                    <div className="absolute top-0 right-0 p-1 opacity-20"><Icons.Sparkles size={10} className="text-accent" /></div>
-                                                    {summaries[call.id]}
-                                                </div>
+                                                <button
+                                                    onClick={() => handleToggleSummary(call.id)}
+                                                    className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors"
+                                                >
+                                                    <Icons.ChevronRight size={12} className={`transition-transform ${expandedSummaryId === call.id ? 'rotate-90' : ''}`} />
+                                                    {expandedSummaryId === call.id ? 'Hide Summary' : 'View Summary'}
+                                                </button>
                                             ) : (
                                                 <button 
                                                     onClick={() => handleGenerateSummary(call.id)}
@@ -213,8 +266,19 @@ const App: React.FC = () => {
                                                 </button>
                                             )}
                                         </td>
-                                        <td className="px-6 py-5 text-gray-500 text-right text-xs whitespace-nowrap">{call.time}</td>
+                                        <td className="px-4 py-3 text-gray-500 text-right text-xs whitespace-nowrap">{call.time}</td>
                                     </tr>
+                                    {expandedSummaryId === call.id && summaries[call.id] && (
+                                      <tr className="bg-foreground/5 animate-in fade-in duration-300">
+                                          <td colSpan={6} className="px-4 py-3 border-b border-border">
+                                              <div className="flex items-start gap-3 pl-4">
+                                                  <Icons.Sparkles size={14} className="text-accent mt-0.5 shrink-0" />
+                                                  <p className="text-xs text-gray-400 leading-relaxed">{summaries[call.id]}</p>
+                                              </div>
+                                          </td>
+                                      </tr>
+                                    )}
+                                  </React.Fragment>
                                 ))}
                             </tbody>
                         </table>
