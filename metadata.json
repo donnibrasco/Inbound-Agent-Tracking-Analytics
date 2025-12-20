@@ -1,5 +1,7 @@
 {
   "name": "Call Insights Hub",
   "description": "A dark-mode analytics dashboard for tracking business call performance, bookings, and regional metrics.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

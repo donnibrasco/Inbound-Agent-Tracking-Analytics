@@ -1,3 +1,4 @@
+
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,13 +22,9 @@ app.use(express.static(path.join(__dirname, 'dist')));
 app.post('/api/analyze', async (req, res) => {
   try {
     const { dataContext, userQuery } = req.body;
-    const apiKey = process.env.API_KEY;
 
-    if (!apiKey) {
-      return res.status(500).json({ error: 'Server API Key configuration missing' });
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
+    // Use recommended initialization pattern for @google/genai SDK
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     const contextString = JSON.stringify(dataContext);
     
@@ -48,8 +45,9 @@ app.post('/api/analyze', async (req, res) => {
       ? `Data context: ${contextString}. \nUser Question: ${userQuery}. \nProvide 3 specific data points or insights that answer the question, and one follow-up question.` 
       : basePrompt;
 
+    // Use gemini-3-flash-preview for text-based analysis tasks
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
       contents: finalPrompt,
       config: {
         responseMimeType: 'application/json',
@@ -91,6 +89,7 @@ app.post('/api/analyze', async (req, res) => {
       }
     });
 
+    // Access the text property directly on the GenerateContentResponse object
     const text = response.text;
     if (!text) {
       throw new Error("No response from AI");

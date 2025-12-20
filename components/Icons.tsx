@@ -29,7 +29,17 @@ import {
   Video,
   Image,
   ShoppingBag,
-  Music
+  Music,
+  Cpu,
+  UserCheck,
+  ChevronRight,
+  Sun,
+  Moon,
+  BarChart,
+  Target,
+  FileText,
+  Settings,
+  Headphones
 } from 'lucide-react';
 
 export const Icons = {
@@ -62,5 +72,15 @@ export const Icons = {
   Video,
   Image,
   ShoppingBag,
-  Music
+  Music,
+  Cpu,
+  UserCheck,
+  ChevronRight,
+  Sun,
+  Moon,
+  BarChart,
+  Target,
+  FileText,
+  Settings,
+  Headphones
 };

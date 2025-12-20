@@ -1,10 +1,25 @@
+
 export interface CallMetric {
   label: string;
   value: string;
   subtext: string;
-  change: number; // percentage
+  change: number; 
   trend: 'up' | 'down';
-  icon: 'phone' | 'clock' | 'calendar' | 'activity';
+  icon: 'phone' | 'clock' | 'calendar' | 'activity' | 'cpu' | 'mic' | 'headphones' | 'message-square';
+}
+
+export interface AiAgentMetric {
+  name: string;
+  inbound: number;
+  outbound: number;
+}
+
+export interface AgentOutcome {
+  name: string;
+  value: number;
+  color: string;
+  // Added index signature to fix "Index signature for type 'string' is missing" error in Recharts
+  [key: string]: string | number;
 }
 
 export interface ChartDataPoint {
@@ -22,7 +37,7 @@ export interface Territory {
   growth: number;
   status: 'High' | 'Medium' | 'Low';
   coordinates: { lat: number; lng: number };
-  history: number[]; // Added for sparkline graph
+  history: number[]; 
 }
 
 export interface RecentCall {
@@ -30,8 +45,9 @@ export interface RecentCall {
   caller: string;
   phone: string;
   duration: string;
-  outcome: 'Booked' | 'Follow Up' | 'Not Interested' | 'Interested';
+  outcome: 'Booked' | 'Follow Up' | 'Not Interested' | 'Interested' | 'Transferred' | 'Resolved';
   interest: 'High' | 'Medium' | 'Low';
+  type: 'Inbound' | 'Outbound';
   time: string;
 }
 
@@ -56,7 +72,7 @@ export interface AttributionSource {
 
 export interface AttributionTrend {
   date: string;
-  [key: string]: string | number; // For dynamic source keys
+  [key: string]: string | number;
 }
 
 export interface InsightItem {
