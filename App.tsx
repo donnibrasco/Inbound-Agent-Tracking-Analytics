@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { METRICS, VOLUME_DATA, OUTCOME_DATA, RECENT_CALLS } from './constants';
+import dataService from './services/dataService';
 import { Icons } from './components/Icons';
 import Sidebar from './components/Sidebar';
 import MetricCard from './components/MetricCard';
@@ -9,8 +9,10 @@ import AttributionSection from './components/AttributionSection';
 import AiAgentSection from './components/AiAgentSection';
 import AiAssistantBar from './components/AiAssistantBar';
 import AiInsightsView from './components/AiInsightsView';
+import ServicesConfig from './components/ServicesConfig';
+import CallHistorySection from './components/CallHistorySection';
 import { analyzeDashboard, summarizeCall } from './services/geminiService';
-import { InsightData } from './types';
+import { InsightData, CallMetric, ChartDataPoint, OutcomeData, RecentCall } from './types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const App: React.FC = () => {
@@ -22,7 +24,67 @@ const App: React.FC = () => {
   const [loadingSummaries, setLoadingSummaries] = useState<Record<string, boolean>>({});
   const [expandedSummaryId, setExpandedSummaryId] = useState<string | null>(null);
   const [callSortConfig, setCallSortConfig] = useState<{ key: 'interest' | null, direction: 'asc' | 'desc' }>({ key: null, direction: 'desc' });
+  
+  // Data state from database
+  const [METRICS, setMetrics] = useState<CallMetric[]>([]);
+  const [VOLUME_DATA, setVolumeData] = useState<ChartDataPoint[]>([]);
+  const [OUTCOME_DATA, setOutcomeData] = useState<OutcomeData[]>([]);
+  const [RECENT_CALLS, setRecentCalls] = useState<RecentCall[]>([]);
+  const [territories, setTerritories] = useState<any[]>([]);
+  const [attributionSources, setAttributionSources] = useState<any[]>([]);
+  const [attributionTrends, setAttributionTrends] = useState<any[]>([]);
+  const [aiDetailedMetrics, setAiDetailedMetrics] = useState<CallMetric[]>([]);
+  const [aiPerformanceData, setAiPerformanceData] = useState<any[]>([]);
+  const [agentOutcomes, setAgentOutcomes] = useState<any[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
+  // Load data from database on mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setDataLoading(true);
+      const [
+        metrics, 
+        volumeData, 
+        outcomeData, 
+        recentCalls,
+        territoriesData,
+        attrSources,
+        attrTrends,
+        aiMetrics,
+        aiPerf,
+        agentOut
+      ] = await Promise.all([
+        dataService.fetchMetrics('main'),
+        dataService.fetchVolumeData(7),
+        dataService.fetchOutcomeData(),
+        dataService.fetchRecentCalls(10),
+        dataService.fetchTerritories(),
+        dataService.fetchAttributionSources(),
+        dataService.fetchAttributionTrends(),
+        dataService.fetchMetrics('ai_detailed'),
+        dataService.fetchAiMetrics(),
+        dataService.fetchAgentOutcomes()
+      ]);
+      setMetrics(metrics);
+      setVolumeData(volumeData);
+      setOutcomeData(outcomeData);
+      setRecentCalls(recentCalls);
+      setTerritories(territoriesData);
+      setAttributionSources(attrSources);
+      setAttributionTrends(attrTrends);
+      setAiDetailedMetrics(aiMetrics);
+      setAiPerformanceData(aiPerf);
+      setAgentOutcomes(agentOut);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setDataLoading(false);
+    }
+  };
 
   useEffect(() => {
     handleAiAnalysis();
@@ -112,7 +174,7 @@ const App: React.FC = () => {
                   <h3 className="text-foreground font-semibold text-lg">Call Traffic Volume</h3>
                   <p className="text-gray-500 text-sm">Weekly lead flow vs closed bookings</p>
                 </div>
-                <div className="h-[320px] w-full">
+                <div className="h-[320px] w-full" style={{ minHeight: '320px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={VOLUME_DATA} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <defs>
@@ -144,14 +206,16 @@ const App: React.FC = () => {
           </div>
         );
       case 'ai-agent':
-        return <div className="animate-in fade-in duration-500"><AiAgentSection /></div>;
+        return <div className="animate-in fade-in duration-500"><AiAgentSection detailedMetrics={aiDetailedMetrics} performanceData={aiPerformanceData} outcomes={agentOutcomes} /></div>;
+      case 'call-history':
+        return <div className="animate-in fade-in duration-500"><CallHistorySection /></div>;
       case 'marketing':
-        return <div className="animate-in fade-in duration-500"><AttributionSection /></div>;
+        return <div className="animate-in fade-in duration-500"><AttributionSection sources={attributionSources} trends={attributionTrends} /></div>;
       case 'territories':
         return (
           <div className="space-y-4 animate-in fade-in duration-500">
             <h2 className="text-2xl font-bold text-foreground">Market Distribution</h2>
-            <TerritoryMap />
+            <TerritoryMap territories={territories} />
           </div>
         );
       case 'activity':
@@ -162,7 +226,7 @@ const App: React.FC = () => {
                         <h3 className="text-foreground font-semibold text-lg">Lead Outcomes</h3>
                         <p className="text-gray-500 text-sm">Sentiment and distribution</p>
                     </div>
-                    <div className="h-[250px] relative">
+                    <div className="h-[250px] relative" style={{ minHeight: '250px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
@@ -286,6 +350,8 @@ const App: React.FC = () => {
                </div>
           </div>
         );
+      case 'services':
+        return <div className="animate-in fade-in duration-500"><ServicesConfig /></div>;
       default:
         return null;
     }

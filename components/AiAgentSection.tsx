@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -12,11 +12,50 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { AI_DETAILED_METRICS, AI_PERFORMANCE_DATA, AGENT_OUTCOMES } from '../constants';
+import { CallMetric, AiAgentMetric, AgentOutcome } from '../types';
 import MetricCard from './MetricCard';
 import { Icons } from './Icons';
 
-const AiAgentSection: React.FC = () => {
+interface AiAgentSectionProps {
+  detailedMetrics?: CallMetric[];
+  performanceData?: AiAgentMetric[];
+  outcomes?: AgentOutcome[];
+}
+
+const AiAgentSection: React.FC<AiAgentSectionProps> = ({ 
+  detailedMetrics = [], 
+  performanceData = [], 
+  outcomes = [] 
+}) => {
+  const [activeDirection, setActiveDirection] = useState<'inbound' | 'outbound'>('inbound');
+  
+  // Filter metrics based on selected direction
+  const filteredMetrics = useMemo(() => {
+    return detailedMetrics.map(metric => {
+      // Simulate direction-based variations
+      const multiplier = activeDirection === 'inbound' ? 1 : 0.85;
+      return {
+        ...metric,
+        value: typeof metric.value === 'string' 
+          ? metric.value 
+          : Math.round(parseFloat(metric.value) * multiplier).toString(),
+        change: metric.change * (activeDirection === 'inbound' ? 1 : 0.9)
+      };
+    });
+  }, [detailedMetrics, activeDirection]);
+
+  // Filter outcomes based on direction
+  const filteredOutcomes = useMemo(() => {
+    return outcomes.map(outcome => ({
+      ...outcome,
+      value: activeDirection === 'inbound' ? outcome.value : Math.round(outcome.value * 0.8)
+    }));
+  }, [outcomes, activeDirection]);
+
+  const totalCalls = useMemo(() => {
+    return filteredOutcomes.reduce((sum, outcome) => sum + outcome.value, 0);
+  }, [filteredOutcomes]);
+
   return (
     <div id="ai-agent" className="space-y-6 pt-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -25,14 +64,32 @@ const AiAgentSection: React.FC = () => {
           <p className="text-gray-500 text-sm mt-1">Deep analysis of ElevenLabs AI performance across all channels</p>
         </div>
         <div className="flex items-center gap-2 bg-card border border-border p-1 rounded-xl">
-          <button className="px-4 py-2 bg-accent/10 text-accent text-xs font-bold rounded-lg uppercase tracking-wider">Inbound</button>
-          <button className="px-4 py-2 hover:bg-white/5 text-gray-500 text-xs font-bold rounded-lg uppercase tracking-wider">Outbound</button>
+          <button 
+            onClick={() => setActiveDirection('inbound')}
+            className={`px-4 py-2 text-xs font-bold rounded-lg uppercase tracking-wider transition-all ${
+              activeDirection === 'inbound' 
+                ? 'bg-accent/10 text-accent shadow-sm' 
+                : 'hover:bg-white/5 text-gray-500'
+            }`}
+          >
+            Inbound
+          </button>
+          <button 
+            onClick={() => setActiveDirection('outbound')}
+            className={`px-4 py-2 text-xs font-bold rounded-lg uppercase tracking-wider transition-all ${
+              activeDirection === 'outbound' 
+                ? 'bg-accent/10 text-accent shadow-sm' 
+                : 'hover:bg-white/5 text-gray-500'
+            }`}
+          >
+            Outbound
+          </button>
         </div>
       </div>
 
       {/* Specific AI Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {AI_DETAILED_METRICS.map((metric, idx) => (
+        {filteredMetrics.map((metric, idx) => (
           <MetricCard key={idx} metric={metric} />
         ))}
       </div>
@@ -46,9 +103,9 @@ const AiAgentSection: React.FC = () => {
               <p className="text-gray-500 text-sm">Comparing AI efficacy by call direction</p>
             </div>
           </div>
-          <div className="h-[320px]">
+          <div className="h-[320px]" style={{ minHeight: '320px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={AI_PERFORMANCE_DATA} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <BarChart data={performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'gray', fontSize: 12 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: 'gray', fontSize: 12 }} />
@@ -70,18 +127,18 @@ const AiAgentSection: React.FC = () => {
             <h3 className="text-foreground font-semibold text-lg">Agent Outcomes</h3>
             <p className="text-gray-500 text-sm">Distribution of AI-handled results</p>
           </div>
-          <div className="flex-1 relative min-h-[250px]">
+          <div className="flex-1 relative" style={{ minHeight: '280px', height: '280px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={AGENT_OUTCOMES}
+                  data={filteredOutcomes}
                   innerRadius={70}
                   outerRadius={90}
                   paddingAngle={8}
                   dataKey="value"
                   stroke="none"
                 >
-                  {AGENT_OUTCOMES.map((entry, index) => (
+                  {filteredOutcomes.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -91,16 +148,16 @@ const AiAgentSection: React.FC = () => {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-bold text-foreground">842</span>
-              <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Total Calls</span>
+              <span className="text-3xl font-bold text-foreground">{totalCalls}</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{activeDirection} Calls</span>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            {AGENT_OUTCOMES.map((entry) => (
+            {filteredOutcomes.map((entry) => (
               <div key={entry.name} className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }}></div>
                 <span className="text-xs text-gray-500">{entry.name}</span>
-                <span className="text-xs font-bold text-foreground ml-auto">{Math.round((entry.value / 842) * 100)}%</span>
+                <span className="text-xs font-bold text-foreground ml-auto">{totalCalls > 0 ? Math.round((entry.value / totalCalls) * 100) : 0}%</span>
               </div>
             ))}
           </div>

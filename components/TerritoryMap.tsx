@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { TERRITORIES } from '../constants';
+import { Territory } from '../types';
 import { Icons } from './Icons';
 
 // Helper to generate a simple SVG sparkline string
@@ -37,7 +37,11 @@ const generateSparkline = (data: number[], width: number, height: number, color:
   `;
 };
 
-const TerritoryMap: React.FC = () => {
+interface TerritoryMapProps {
+  territories?: Territory[];
+}
+
+const TerritoryMap: React.FC<TerritoryMapProps> = ({ territories = [] }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
 
@@ -75,7 +79,7 @@ const TerritoryMap: React.FC = () => {
       }
     });
 
-    TERRITORIES.forEach((t) => {
+    territories.forEach((t) => {
       const colorHex = t.status === 'High' ? '#10b981' : t.status === 'Medium' ? '#f59e0b' : '#f43f5e';
       const colorClass = t.status === 'High' ? 'bg-emerald-500' : t.status === 'Medium' ? 'bg-amber-500' : 'bg-rose-500';
       
@@ -117,7 +121,7 @@ const TerritoryMap: React.FC = () => {
       marker.on('mouseover', function () { this.openPopup(); });
       marker.on('mouseout', function () { this.closePopup(); });
     });
-  }, []);
+  }, [territories]);
 
   const handleZoomIn = () => mapInstanceRef.current?.zoomIn();
   const handleZoomOut = () => mapInstanceRef.current?.zoomOut();
@@ -154,7 +158,7 @@ const TerritoryMap: React.FC = () => {
              <h4 className="text-gray-500 text-xs font-bold uppercase tracking-wider">Region Performance</h4>
           </div>
           <div className="flex-1 overflow-y-auto max-h-[400px] p-2 custom-scrollbar">
-            {TERRITORIES.map((territory) => (
+            {territories.map((territory) => (
                 <div 
                   key={territory.id} 
                   className="p-4 hover:bg-foreground/5 rounded-lg transition-colors flex items-center justify-between group cursor-pointer"

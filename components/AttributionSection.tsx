@@ -11,15 +11,19 @@ import {
   Bar,
   Legend
 } from 'recharts';
-import { ATTRIBUTION_SOURCES, ATTRIBUTION_TRENDS } from '../constants';
 import { Icons } from './Icons';
 import AdCreativesGallery from './AdCreativesGallery';
-import { AttributionSource } from '../types';
+import { AttributionSource, AttributionTrend } from '../types';
 
 type SortKey = keyof AttributionSource;
 type RateFilter = 'all' | 'high' | 'medium' | 'low';
 
-const AttributionSection: React.FC = () => {
+interface AttributionSectionProps {
+  sources?: AttributionSource[];
+  trends?: AttributionTrend[];
+}
+
+const AttributionSection: React.FC<AttributionSectionProps> = ({ sources = [], trends = [] }) => {
   const [activeTab, setActiveTab] = useState<'performance' | 'creatives'>('performance');
   const [sortKey, setSortKey] = useState<SortKey>('leads');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -35,7 +39,7 @@ const AttributionSection: React.FC = () => {
   };
 
   const filteredAndSortedSources = useMemo(() => {
-    let result = [...ATTRIBUTION_SOURCES];
+    let result = [...sources];
     if (rateFilter === 'high') result = result.filter(s => s.conversionRate >= 15);
     else if (rateFilter === 'medium') result = result.filter(s => s.conversionRate >= 10 && s.conversionRate < 15);
     else if (rateFilter === 'low') result = result.filter(s => s.conversionRate < 10);
@@ -48,7 +52,7 @@ const AttributionSection: React.FC = () => {
       return 0;
     });
     return result;
-  }, [sortKey, sortOrder, rateFilter]);
+  }, [sources, sortKey, sortOrder, rateFilter]);
 
   const renderSortIcon = (key: SortKey) => {
     if (sortKey !== key) return <Icons.MoreHorizontal size={12} className="ml-1 opacity-20" />;
@@ -97,9 +101,9 @@ const AttributionSection: React.FC = () => {
                             className="bg-transparent text-xs text-foreground outline-none cursor-pointer py-1"
                           >
                             <option value="all">All Performance</option>
-                            <option value="high">High (>15%)</option>
+                            <option value="high">High (&gt;15%)</option>
                             <option value="medium">Medium (10-15%)</option>
-                            <option value="low">Low (<10%)</option>
+                            <option value="low">Low (&lt;10%)</option>
                           </select>
                         </div>
                         <button className="text-xs bg-foreground/5 hover:bg-foreground/10 text-foreground px-3 py-2 rounded-lg transition-colors border border-border flex items-center font-bold">
@@ -161,15 +165,15 @@ const AttributionSection: React.FC = () => {
                             Last 30 Days
                         </div>
                     </div>
-                    <div className="h-[320px] w-full">
+                    <div className="h-[320px] w-full" style={{ minHeight: '320px' }}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={ATTRIBUTION_TRENDS}>
+                            <LineChart data={trends}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
                                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'gray', fontSize: 12 }} dy={10} />
                                 <YAxis axisLine={false} tickLine={false} tick={{ fill: 'gray', fontSize: 12 }} />
                                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }} />
                                 <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                {ATTRIBUTION_SOURCES.map((source) => (
+                                {sources.map((source) => (
                                     <Line key={source.source} type="monotone" dataKey={source.source} stroke={source.color} strokeWidth={2} dot={false} activeDot={{ r: 6 }} />
                                 ))}
                             </LineChart>
@@ -182,9 +186,9 @@ const AttributionSection: React.FC = () => {
                         <h3 className="text-foreground font-semibold text-lg">Conversion Efficiency</h3>
                         <p className="text-gray-500 text-sm mt-1">Leads vs Booked Calls</p>
                     </div>
-                    <div className="flex-1 min-h-[250px]">
+                    <div className="flex-1" style={{ minHeight: '280px', height: '280px' }}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={ATTRIBUTION_SOURCES} layout="vertical" margin={{ left: 20 }}>
+                            <BarChart data={sources} layout="vertical" margin={{ left: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" opacity={0.5} />
                                 <XAxis type="number" hide />
                                 <YAxis dataKey="source" type="category" width={80} tick={{ fill: 'gray', fontSize: 10 }} interval={0} />
@@ -208,7 +212,7 @@ const AttributionSection: React.FC = () => {
             </div>
         </div>
       ) : (
-        <AdCreativesGallery sources={ATTRIBUTION_SOURCES} />
+        <AdCreativesGallery sources={sources} />
       )}
     </div>
   );

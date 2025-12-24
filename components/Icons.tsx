@@ -39,7 +39,18 @@ import {
   Target,
   FileText,
   Settings,
-  Headphones
+  Headphones,
+  ChevronDown,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Loader,
+  Info,
+  PhoneIncoming,
+  PhoneOutgoing,
+  Pause,
+  Download,
+  Minus
 } from 'lucide-react';
 
 export const Icons = {
@@ -82,5 +93,16 @@ export const Icons = {
   Target,
   FileText,
   Settings,
-  Headphones
+  Headphones,
+  ChevronDown,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Loader,
+  Info,
+  PhoneIncoming,
+  PhoneOutgoing,
+  Pause,
+  Download,
+  Minus
 };

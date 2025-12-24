@@ -4,65 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Call Insights Hub | AI Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      window.tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              border: "hsl(var(--border))",
-              background: "hsl(var(--background))",
-              foreground: "hsl(var(--foreground))",
-              card: "hsl(var(--card))",
-              accent: "hsl(var(--accent))"
-            }
-          }
-        }
-      };
-    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-      :root {
-        --background: 222 47% 11%;
-        --foreground: 210 40% 98%;
-        --card: 222 47% 8%;
-        --border: 217 33% 17%;
-        --accent: 171 77% 64%;
-      }
-      .light {
-        --background: 210 40% 98%;
-        --foreground: 222 47% 11%;
-        --card: 0 0% 100%;
-        --border: 214 32% 91%;
-        --accent: 171 77% 40%;
-      }
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: hsl(var(--background));
-        color: hsl(var(--foreground));
-        transition: background-color 0.3s ease, color 0.3s ease;
-      }
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #374151; 
-        border-radius: 10px;
-      }
-      .leaflet-container {
-        background: hsl(var(--card));
-        font-family: 'Inter', sans-serif;
-      }
-      .dark .leaflet-tile {
-        filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-      }
-    </style>
     <script type="importmap">
 {
   "imports": {

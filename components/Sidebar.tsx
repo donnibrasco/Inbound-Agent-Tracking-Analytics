@@ -10,9 +10,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSection }) =>
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: 'BarChart' },
     { id: 'ai-agent', label: 'AI Voice Agent', icon: 'Headphones' },
+    { id: 'call-history', label: 'Call History', icon: 'Phone' },
     { id: 'marketing', label: 'Marketing ROI', icon: 'Target' },
     { id: 'territories', label: 'Territory Map', icon: 'MapPin' },
-    { id: 'activity', label: 'Recent Activity', icon: 'Clock' }
+    { id: 'activity', label: 'Recent Activity', icon: 'Clock' },
+    { id: 'services', label: 'External Services', icon: 'Settings' }
   ];
 
   return (
